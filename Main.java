@@ -1,6 +1,52 @@
 import java.util.*;
 
 public class Main {
+
+    static class Process {
+
+        int pid;
+        int arrivalTime;
+        int burstTime;
+        int priority;
+
+        int remainingBurstTime;
+        int startTime = -1;
+        int finishTime = -1;
+
+        int turnAroundTime;
+        int waitingTime;
+        int responseTime;
+
+        Process(int pid, int arrivalTime, int burstTime, int priority){
+            this.pid = pid;
+            this.arrivalTime = arrivalTime;
+            this.burstTime = burstTime;
+            this.priority = priority;
+            this.remainingBurstTime = burstTime; // when first created
+        }
+
+        @Override
+        public String toString(){
+            return "P" + pid;
+        }
+
+    } // end of class
+
+    static class GanttEntry {
+
+        int pid;        // which process ran
+        int start;      // start time of slice
+        int end;        // end time of slice
+
+        public GanttEntry(int pid, int start, int end) {
+            this.pid = pid;
+            this.start = start;
+            this.end = end;
+        }
+
+    } // end of class
+
+    // main
     public static void main(String[] args) {
         Scanner scanner = new Scanner(System.in);
 
@@ -30,11 +76,13 @@ public class Main {
 
         if (processesList.isEmpty()){
             System.out.println("No processes entered. exiting");
-            System.exit(0);
+            return;
         }
 
+        // perform scheduling and return gantt entries list as gantt
         ArrayList<GanttEntry> gantt = schedule(processesList, quantum);
 
+        // print gantt chart, print stats
         printGanttChart(gantt);
         printStats(processesList);
 
@@ -146,15 +194,11 @@ public class Main {
                 samePriorityQueue.add(currentProcess);
 
             } else{
-                // finished
                 currentProcess.finishTime = currentTime;
                 finishedCount++;
             }
 
-
-
         } // end of main loop
-
 
         return ganttEntries;
     } // end of schedule
