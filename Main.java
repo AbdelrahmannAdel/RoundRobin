@@ -108,8 +108,7 @@ public class Main {
         while (finishedCount < totalProcesses){
 
             // 1 - move all processes that have arrived into readyQueues
-            while (nextIndex < totalProcesses &&
-                    processesList.get(nextIndex).arrivalTime <= currentTime){
+            while (nextIndex < totalProcesses && processesList.get(nextIndex).arrivalTime <= currentTime){
 
                 Process arrivingProcess = processesList.get(nextIndex);
                 nextIndex++;
@@ -166,22 +165,20 @@ public class Main {
             currentProcess.remainingBurstTime -= slice;
 
             // 5 - add any new arrivals that showed during this time slice
-             while (nextIndex < totalProcesses &&
-               processesList.get(nextIndex).arrivalTime <= currentTime){
+             while (nextIndex < totalProcesses && processesList.get(nextIndex).arrivalTime <= currentTime){
+                 Process arrivingProcess = processesList.get(nextIndex);
+                 nextIndex++;
 
-                Process arrivingProcess = processesList.get(nextIndex);
-                nextIndex++;
+                 arrivingProcess.remainingBurstTime = arrivingProcess.burstTime;
 
-                arrivingProcess.remainingBurstTime = arrivingProcess.burstTime;
+                 Queue<Process> arrivalPriorityQueue = readyQueues.get(arrivingProcess.priority);
+                 if (arrivalPriorityQueue == null){
+                     arrivalPriorityQueue = new LinkedList<>();
+                     readyQueues.put(arrivingProcess.priority, arrivalPriorityQueue);
+                 }
+                 arrivalPriorityQueue.add(arrivingProcess);
 
-                Queue<Process> arrivalPriorityQueue = readyQueues.get(arrivingProcess.priority);
-                if (arrivalPriorityQueue == null){
-                    arrivalPriorityQueue = new LinkedList<>();
-                    readyQueues.put(arrivingProcess.priority, arrivalPriorityQueue);
-                }
-                arrivalPriorityQueue.add(arrivingProcess);
-
-            } // end of loop
+            } // end of inner loop
 
             // 6 - if process still has time left, move to back of same priority queue
             if (currentProcess.remainingBurstTime > 0) {
@@ -201,9 +198,10 @@ public class Main {
         } // end of main loop
 
         return ganttEntries;
+
     } // end of schedule
 
-    public static void printGanttChart(ArrayList<GanttEntry> gantt){
+    public static void printGanttChart(ArrayList<GanttEntry> gantt) {
 
         System.out.println("\nGantt chart: ");
 
@@ -213,47 +211,47 @@ public class Main {
         }
 
         for (GanttEntry g : gantt){
-            System.out.print("\n[ P" + g.pid + ": Start = " + g.start + ", End = " + g.end + " ] ");
+            System.out.print("[" + g.start + " - P" + g.pid + " - " + g.end + "] ");
         }
-    }
 
-    
-    public static void printStats(ArrayList<Process> processesList){
+    } // end of printGanttChart
+
+
+    public static void printStats(ArrayList<Process> processesList) {
 
         System.out.println("\nProcess Statistics: ");
-        
+
         double totalTAT = 0;
-        double totalWT = 0;
-        double totalRT = 0;
-        
+        double totalWT  = 0;
+        double totalRT  = 0;
+
+        // Compute stats for each process
         for (Process p : processesList) {
+            p.turnAroundTime = p.finishTime - p.arrivalTime;
+            p.waitingTime    = p.turnAroundTime - p.burstTime;
+            p.responseTime   = p.startTime - p.arrivalTime;
 
-        p.turnAroundTime = p.finishTime - p.arrivalTime;
-        p.waitingTime    = p.turnAroundTime - p.burstTime;
-        p.responseTime   = p.startTime - p.arrivalTime;
-
-        totalTAT += p.turnAroundTime;
-        totalWT  += p.waitingTime;
-        totalRT  += p.responseTime;
-
-        System.out.println("Process P" + p.pid + ":");
-        System.out.println("  Arrival Time   = " + p.arrivalTime);
-        System.out.println("  Burst Time     = " + p.burstTime);
-        System.out.println("  Priority       = " + p.priority);
-        System.out.println("  Start Time     = " + p.startTime);
-        System.out.println("  Finish Time    = " + p.finishTime);
-        System.out.println("  Turnaround     = " + p.turnAroundTime);
-        System.out.println("  Waiting Time   = " + p.waitingTime);
-        System.out.println("  Response Time  = " + p.responseTime);
-        System.out.println();
+            totalTAT += p.turnAroundTime;
+            totalWT  += p.waitingTime;
+            totalRT  += p.responseTime;
         }
 
-    int n = processesList.size();
+        // Print table header ONCE
+        System.out.printf("%-5s %-12s %-10s %-10s%n",
+                "PID", "Turnaround", "Waiting", "Response");
 
-    System.out.println("Average Turnaround Time = " + (totalTAT / n));
-    System.out.println("Average Waiting Time    = " + (totalWT / n));
-    System.out.println("Average Response Time   = " + (totalRT / n));
+        // Print each process row
+        for (Process p : processesList) {
+            System.out.printf("%-5s %-12d %-10d %-10d%n",
+                    "P" + p.pid, p.turnAroundTime, p.waitingTime, p.responseTime);
+        }
 
-    }
-    
+        // Print averages
+        int n = processesList.size();
+        System.out.println("Average Turnaround Time = " + (totalTAT / n));
+        System.out.println("Average Waiting Time    = " + (totalWT / n));
+        System.out.println("Average Response Time   = " + (totalRT / n));
+
+    } // end of printStats
+
 } // end of class
